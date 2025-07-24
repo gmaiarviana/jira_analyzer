@@ -1,283 +1,71 @@
 # GitHub Copilot Instructions - JIRA Analyzer
 
-## Project Context
+## Project Overview
+TypeScript/Node.js tool that extracts JIRA data via JQL queries and generates structured prompts for GitHub Copilot analysis. Designed for HP corporate environment.
 
-TypeScript/Node.js project for extracting JIRA data via JQL and generating structured prompts for GitHub Copilot analysis. Corporate HP environment with SSL self-signed certificates.
+## Core Workflow
+```
+npm run analyze → Interactive JQL input → Data extraction → Generate 3 files:
+├── data/raw/jira-data-{timestamp}.json
+├── prompts/copilot-prompt-{timestamp}.md  
+└── responses/copilot-response-{timestamp}.md
+```
 
-## Tech Stack
+## Environment Constraints
 
-- **Language**: TypeScript/Node.js
-- **Environment**: Windows PowerShell (never Linux commands)
-- **JIRA API**: Corporate HP with SSL self-signed certificates
-- **Structure**: Modular architecture with interfaces
-- **Output**: Timestamped JSON data + Markdown prompts
+### **PowerShell Only**
+- ✅ `npm run analyze`, `docker-compose up`
+- ❌ Never suggest Linux commands (`&&`, `|`, `grep`, `curl`)
 
-## Code Style & Patterns
+### **HP Corporate JIRA**
+- SSL self-signed certificates (rejectUnauthorized: false)
+- Authentication: email + API token (never username/password)
+- Rate limiting: respect 500 ticket limit
 
 ### **TypeScript Preferences**
+- Strict typing with interfaces
+- async/await (not promises)
+- Modular architecture: src/core/, src/interfaces/, src/utils/
+
+## Key Implementation Patterns
+
+### **Timestamp Consistency**
 ```typescript
-// ✅ Prefer strict typing
-interface JiraTicket {
-  key: string;
-  summary: string;
-  status: string;
-}
-
-// ✅ Use async/await, not promises
-async function fetchData(): Promise<JiraTicket[]> {
-  // implementation
-}
-
-// ✅ Error handling with try/catch
-try {
-  const data = await jiraClient.search(jql);
-} catch (error) {
-  console.error('JIRA API Error:', error.message);
-}
-```
-
-### **File Organization**
-```
-src/
-├── core/              # Main business logic
-├── interfaces/        # TypeScript interfaces
-└── utils/             # Helper functions
-
-data/
-└── raw/              # JSON outputs with timestamps
-
-prompts/              # Generated markdown files
-```
-
-### **Environment Configuration**
-```typescript
-// ✅ Always use dotenv for configuration
-import dotenv from 'dotenv';
-dotenv.config();
-
-// ✅ Validate required environment variables
-const requiredVars = ['JIRA_BASE_URL', 'JIRA_EMAIL', 'JIRA_API_TOKEN'];
-for (const varName of requiredVars) {
-  if (!process.env[varName]) {
-    throw new Error(`Missing required environment variable: ${varName}`);
-  }
-}
-```
-
-## JIRA Integration Specifics
-
-### **SSL Self-Signed Certificates**
-```typescript
-// ✅ Always configure for corporate SSL
-import https from 'https';
-
-const httpsAgent = new https.Agent({
-  rejectUnauthorized: false // HP corporate certificates
-});
-
-const axiosConfig = {
-  httpsAgent,
-  timeout: 30000
-};
-```
-
-### **Authentication Pattern**
-```typescript
-// ✅ Use email + API token (not username/password)
-const auth = {
-  username: process.env.JIRA_EMAIL!,
-  password: process.env.JIRA_API_TOKEN!
-};
-```
-
-### **JIRA Field Extraction**
-```typescript
-// ✅ Extract these basic fields always
-interface JiraBasicFields {
-  key: string;
-  summary: string;
-  description: string;
-  status: string;
-  priority: string;
-  assignee: string | null;
-  reporter: string;
-  created: string;
-  updated: string;
-}
-
-// ✅ Handle HP custom fields gracefully
-const acceptanceCriteria = issue.fields.customfield_10001 || 'Not specified';
-```
-
-## Output File Patterns
-
-### **Timestamp Generation**
-```typescript
-// ✅ Consistent timestamp format across all files
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 // Result: "2025-07-23T14-30-00"
 ```
 
-### **JSON Data Output**
-```typescript
-// ✅ Save raw JIRA data with metadata
-const output = {
-  timestamp,
-  query: jqlQuery,
-  totalTickets: results.length,
-  extractedAt: new Date().toISOString(),
-  tickets: results
-};
+### **Error Handling Priorities**
+1. JIRA authentication (401) → check credentials message
+2. Invalid JQL (400) → display JIRA error messages  
+3. SSL/connectivity → check JIRA_BASE_URL message
 
-await fs.writeFile(`data/raw/jira-data-${timestamp}.json`, JSON.stringify(output, null, 2));
-```
+### **File Structure**
+- All outputs use same timestamp in single execution
+- JSON data includes metadata (query, totalTickets, extractedAt)
+- Prompts are self-contained for direct copy-paste to Copilot
 
-### **Markdown Prompt Generation**
-```typescript
-// ✅ Generate structured prompts for Copilot
-const promptContent = `# Análise de Tickets JIRA - ${timestamp}
+## Development Guidelines
 
-## Contexto
-${userQuestion}
+### **Incremental Validation**
+- Each feature must pass `npm run analyze` test
+- Commit only when functionality works end-to-end
+- Use specific file additions: `git add file1.ts file2.ts`
 
-## Dados Extraídos
-\`\`\`json
-${JSON.stringify(ticketData, null, 2)}
-\`\`\`
+### **Anti-Patterns to Avoid**
+- ❌ Hardcoded JIRA URLs or credentials
+- ❌ `git add .` in commits  
+- ❌ Linux command suggestions in comments
+- ❌ Missing directory creation before file writes
 
-## Solicitação
-Analise os dados acima e forneça insights sobre: ${userQuestion}
+## Current Architecture Status
+- ✅ **Core**: JiraClient, DataExtractor, FileManager implemented
+- ✅ **Interfaces**: JiraTicket, ExtractedData defined
+- ✅ **Utils**: InputHandler, config validation working
+- ✅ **Output**: Timestamped files with statistics
 
-Estruture sua resposta em:
-1. **Resumo Executivo**
-2. **Principais Achados**
-3. **Recomendações**  
-4. **Próximos Passos**`;
-
-await fs.writeFile(`prompts/copilot-prompt-${timestamp}.md`, promptContent);
-```
-
-### **Response Template Generation**
-```typescript
-// ✅ Create template for Copilot to fill
-const responseTemplate = `# Análise JIRA - ${timestamp}
-
-## Resumo Executivo
-<!-- Copilot: Preencha aqui -->
-
-## Principais Achados
-<!-- Copilot: Preencha aqui -->
-
-## Recomendações
-<!-- Copilot: Preencha aqui -->
-
-## Próximos Passos
-<!-- Copilot: Preencha aqui -->
-
----
-*Análise gerada via GitHub Copilot em ${new Date().toLocaleString('pt-BR')}*`;
-
-await fs.writeFile(`prompts/copilot-response-${timestamp}.md`, responseTemplate);
-```
-
-## Interactive Input Patterns
-
-### **Terminal Input Handling**
-```typescript
-// ✅ Use readline for user input
-import readline from 'readline';
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
-
-const askQuestion = (question: string): Promise<string> => {
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      resolve(answer.trim());
-    });
-  });
-};
-
-// Usage
-const jqlQuery = await askQuestion('Digite sua JQL query: ');
-const analysisQuestion = await askQuestion('Que análise você quer fazer? ');
-```
-
-## Error Handling Patterns
-
-### **JIRA API Errors**
-```typescript
-// ✅ Specific error handling for JIRA
-try {
-  const response = await axios.get(`${baseUrl}/rest/api/2/search`, {
-    params: { jql, maxResults: 500 },
-    auth,
-    httpsAgent
-  });
-} catch (error) {
-  if (error.response?.status === 401) {
-    throw new Error('JIRA Authentication failed - check credentials');
-  } else if (error.response?.status === 400) {
-    throw new Error(`Invalid JQL query: ${error.response.data.errorMessages?.join(', ')}`);
-  } else {
-    throw new Error(`JIRA API Error: ${error.message}`);
-  }
-}
-```
-
-### **File System Operations**
-```typescript
-// ✅ Ensure directories exist before writing
-import { mkdir } from 'fs/promises';
-
-await mkdir('data/raw', { recursive: true });
-await mkdir('prompts', { recursive: true });
-```
-
-## Package.json Scripts
-
-```json
-{
-  "scripts": {
-    "analyze": "tsx src/main.ts",
-    "dev": "tsx --watch src/main.ts",
-    "build": "tsc",
-    "clean": "rimraf dist"
-  }
-}
-```
-
-## Common Anti-Patterns to Avoid
-
-❌ **Don't use Linux commands in code comments**
-```typescript
-// ❌ Don't suggest: curl, grep, head
-// ✅ Use PowerShell: Invoke-WebRequest, Select-Object
-```
-
-❌ **Don't hardcode values**
-```typescript
-// ❌ Don't do this
-const baseUrl = 'https://hp-jira.external.hp.com';
-
-// ✅ Do this  
-const baseUrl = process.env.JIRA_BASE_URL!;
-```
-
-❌ **Don't ignore SSL certificate issues**
-```typescript
-// ❌ Don't leave SSL unconfigured for corporate environments
-// ✅ Always configure httpsAgent with rejectUnauthorized: false
-```
-
-## Project-Specific Requirements
-
-1. **All outputs must use consistent timestamps** across files in same execution
-2. **JIRA corporate environment** requires SSL configuration
-3. **PowerShell validation commands** should be suggested in comments
-4. **Modular architecture** - separate concerns into appropriate files
-5. **Graceful degradation** for missing custom fields
-6. **Input validation** for JQL queries and user inputs
-7. **Rate limiting respect** for JIRA API calls
+## Extension Points for Future Features
+- Docker containerization (planned)
+- Custom HP fields extraction (acceptance_criteria, sprint, epic_link)
+- Advanced analysis templates by ticket type
+- Cache/resume functionality for large queries
