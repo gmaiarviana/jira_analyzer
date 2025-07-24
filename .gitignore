@@ -23,3 +23,4 @@ prompts/
 # OS
 .DS_Store
 Thumbs.db
+responses/
