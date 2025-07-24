@@ -13,6 +13,7 @@ dist/
 # Data outputs
 data/
 prompts/
+responses/
 
 # IDE
 .vscode/
@@ -23,4 +24,3 @@ prompts/
 # OS
 .DS_Store
 Thumbs.db
-responses/
