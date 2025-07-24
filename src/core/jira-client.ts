@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import https from 'https';
+import * as https from 'https';
 import { JiraCredentials, JiraSearchResponse, JiraAuthResponse } from '../interfaces/jira-types.js';
 
 export class JiraClient {

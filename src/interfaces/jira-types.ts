@@ -28,3 +28,12 @@ export interface JiraAuthResponse {
   emailAddress: string;
   active: boolean;
 }
+
+export interface ExtractedData {
+  timestamp: string;
+  query: string;
+  totalTickets: number;
+  extractedAt: string;
+  maxResults: number;
+  tickets: JiraTicket[];
+}
