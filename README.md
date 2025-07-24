@@ -1,116 +1,47 @@
-# 🎯 JIRA Analyzer - Interactive Data Extraction & Analysis
+# 🎯 JIRA Analyzer - Extração de Dados para Análise com GitHub Copilot
 
-Sistema completo para extração interativa de dados do JIRA via JQL com geração automática de prompts para análise com GitHub Copilot.
-
-## ✨ Funcionalidades
-
-- 🔍 **Input Interativo de JQL**: Interface amigável para entrada de consultas JQL
-- 📊 **Extração Completa**: Normalização automática de dados dos tickets
-- 📝 **Geração de Prompts**: Criação automática de prompts estruturados para Copilot
-- 💾 **Salvamento Timestamped**: Arquivos organizados com timestamps únicos
-- 🎨 **Templates de Resposta**: Modelos pré-formatados para análises
+Sistema para extração interativa de dados do JIRA via JQL com geração automática de prompts estruturados para análise com GitHub Copilot.
 
 ## 🚀 Início Rápido
 
-### 1. Configuração
+### 1. Pré-requisitos
+- Node.js 18+ instalado
+- Credenciais JIRA (email + API token)
+
+### 2. Setup
 ```bash
 # Clone e instale dependências
 npm install
 
-# Configure credenciais
+# Configure credenciais JIRA
 cp .env.example .env
-# Edite .env com suas credenciais JIRA
+# Edite .env com suas credenciais
 ```
 
-### 2. Execução
+### 3. Uso
 ```bash
-npm start
+npm run analyze
 ```
 
-### 3. Fluxo Interativo
+### 4. Fluxo de Trabalho
 1. **Digite sua consulta JQL** (ex: `assignee = currentUser()`)
 2. **Defina sua pergunta de análise** (ex: "Analise performance do sprint")
-3. **Aguarde a extração** dos dados
-4. **Use os arquivos gerados** com GitHub Copilot
+3. **Aguarde a extração** dos dados do JIRA
+4. **Copie o prompt gerado** e cole no GitHub Copilot Chat
+5. **Use a análise** do Copilot para insights acionáveis
 
-## 📁 Estrutura de Arquivos Gerados
+## 📁 Arquivos Gerados
+
+O sistema gera 3 arquivos com timestamp único:
 
 ```
-data/
-└── raw/
-    └── jira-data-2025-01-23T14-30-15.json    # Dados extraídos
-
-prompts/
-├── copilot-prompt-2025-01-23T14-30-15.md    # Prompt para Copilot
-└── copilot-response-2025-01-23T14-30-15.md  # Template de resposta
+data/raw/jira-data-2025-01-23T14-30-15.json         # Dados extraídos do JIRA
+prompts/copilot-prompt-2025-01-23T14-30-15.md       # Para colar no Copilot
+responses/copilot-response-2025-01-23T14-30-15.md   # Template de resposta
 ```
 
-### Exemplo de Dados Extraídos
-```json
-{
-  "timestamp": "2025-01-23T14-30-15",
-  "query": "assignee = currentUser() AND status = 'In Progress'",
-  "totalTickets": 25,
-  "extractedAt": "2025-01-23T17:30:15.123Z",
-  "maxResults": 500,
-  "tickets": [
-    {
-      "key": "PROJ-123",
-      "summary": "Implementar nova funcionalidade",
-      "description": "Descrição detalhada...",
-      "status": "In Progress",
-      "priority": "High",
-      "assignee": "João Silva",
-      "reporter": "Maria Santos",
-      "created": "2025-01-20T10:00:00.000Z",
-      "updated": "2025-01-23T16:45:00.000Z"
-    }
-  ]
-}
-```
+## ⚙️ Configuração (.env)
 
-## 🤖 Uso com GitHub Copilot
-
-### 1. Copiar Prompt
-- Abra: `prompts/copilot-prompt-{timestamp}.md`
-- Copie todo conteúdo
-- Cole no GitHub Copilot Chat
-
-### 2. Obter Análise
-- Copilot analisa os dados automaticamente
-- Gera insights estruturados
-- Fornece recomendações acionáveis
-
-### 3. Documentar Resposta
-- Use: `prompts/copilot-response-{timestamp}.md`
-- Preencha com insights do Copilot
-- Mantenha histórico de análises
-
-## 📊 Exemplos de Consultas JQL
-
-### Performance de Sprint
-```jql
-project = "MYPROJECT" AND sprint in openSprints()
-```
-
-### Bugs Críticos
-```jql
-priority = "Critical" AND type = "Bug" AND status != "Done"
-```
-
-### Workload da Equipe
-```jql
-assignee in ("user1", "user2", "user3") AND status in ("To Do", "In Progress")
-```
-
-### Tickets Antigos
-```jql
-created <= -30d AND status != "Done" AND status != "Cancelled"
-```
-
-## 🛠️ Configuração Avançada
-
-### Variáveis de Ambiente
 ```bash
 # Obrigatórias
 JIRA_BASE_URL=https://sua-instancia-jira.com
@@ -119,69 +50,89 @@ JIRA_API_TOKEN=seu_token_api
 
 # Opcionais
 MAX_TICKETS=500        # Máximo de tickets por consulta
-DEBUG=false            # Modo debug (logs detalhados)
+DEBUG=false            # Logs detalhados
 ```
 
-### Exemplos de Perguntas de Análise
+### Como obter API Token JIRA
+1. Acesse: JIRA → Profile → Personal Access Tokens
+2. Crie novo token com permissões de leitura
+3. Copie o token para JIRA_API_TOKEN
 
-**Performance:**
-- "Analise a performance do sprint atual e identifique gargalos"
-- "Avalie a distribuição de workload entre membros da equipe"
+## 📊 Exemplos de Uso
 
-**Qualidade:**
-- "Identifique padrões em bugs críticos e sugira melhorias"
+### Consultas JQL Comuns
+```jql
+# Meus tickets em andamento
+assignee = currentUser() AND status = "In Progress"
+
+# Bugs críticos em aberto
+priority = "Critical" AND type = "Bug" AND status != "Done"
+
+# Sprint atual
+project = "MYPROJECT" AND sprint in openSprints()
+
+# Tickets antigos não resolvidos
+created <= -30d AND status != "Done"
+```
+
+### Perguntas de Análise
+- "Analise a distribuição de workload da equipe e identifique sobrecarga"
+- "Identifique padrões em bugs críticos e sugira melhorias de processo"
+- "Avalie a performance do sprint atual e gargalos"
 - "Analise tickets com maior tempo de resolução"
 
-**Processo:**
-- "Revise fluxo de aprovações e identifique ineficiências"
-- "Analise frequência de mudanças de prioridade"
+## 🤖 Uso com GitHub Copilot
 
-## 🏗️ Arquitetura
+1. **Execute**: `npm run analyze`
+2. **Abra**: `prompts/copilot-prompt-{timestamp}.md`
+3. **Copie tudo** e cole no GitHub Copilot Chat
+4. **Obtenha análise** estruturada automaticamente
+5. **Documente**: Use `responses/copilot-response-{timestamp}.md`
 
+## 🛠️ Troubleshooting
+
+### Erro de Autenticação
+```
+❌ JIRA Authentication failed - check credentials in .env
+```
+- Verifique JIRA_EMAIL e JIRA_API_TOKEN no .env
+- Teste acesso manual ao JIRA
+
+### Erro de Conexão
+```
+❌ JIRA Connection refused - check JIRA_BASE_URL in .env
+```
+- Verifique URL do JIRA (inclua https://)
+- Teste conectividade de rede
+
+### JQL Inválido
+```
+❌ Invalid JQL query: Field 'xyz' does not exist
+```
+- Valide sintaxe JQL no JIRA web interface
+- Verifique nomes de campos customizados
+
+## 🏗️ Para Desenvolvedores
+
+### Scripts Disponíveis
+```bash
+npm run analyze    # Execução principal
+npm run dev        # Modo desenvolvimento (watch)
+npm run build      # Build TypeScript
+npm run lint       # Linting código
+```
+
+### Estrutura do Código
 ```
 src/
-├── core/
-│   ├── jira-client.ts      # Cliente JIRA com autenticação
-│   └── data-extractor.ts   # Extração e normalização
-├── interfaces/
-│   └── jira-types.ts       # Tipos TypeScript
-├── utils/
-│   ├── config.ts           # Configurações
-│   ├── input-handler.ts    # Interface interativa
-│   └── file-manager.ts     # Gerenciamento de arquivos
-└── main.ts                 # Ponto de entrada
+├── core/           # Lógica principal (JIRA client, extração)
+├── interfaces/     # Tipos TypeScript
+├── utils/          # Utilitários (config, inputs, arquivos)
+└── main.ts         # Ponto de entrada
 ```
 
-## 🔧 Desenvolvimento
-
-### Build
-```bash
-npm run build
-```
-
-### Linting
-```bash
-npm run lint
-```
-
-### Debug
-```bash
-DEBUG=true npm start
-```
-
-## 📝 Contribuição
-
-1. Fork o projeto
-2. Crie feature branch (`git checkout -b feature/nova-funcionalidade`)
-3. Commit mudanças (`git commit -am 'Add nova funcionalidade'`)
-4. Push branch (`git push origin feature/nova-funcionalidade`)
-5. Abra Pull Request
+Ver `docs/ARCHITECTURE.md` para detalhes técnicos.
 
 ## 📄 Licença
 
-MIT License - veja [LICENSE](LICENSE) para detalhes.
-
----
-
-**🎯 Fluxo Completo:**
-Input JQL → Extração → Prompt Copilot → Análise → Insights Acionáveis
+MIT License
