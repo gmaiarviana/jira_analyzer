@@ -42,7 +42,19 @@
 - Deve especificar tipo de dado (number, string, date, object, array)
 - Deve documentar valores possíveis para enums (team, priority, status)
 
-**Status:** ⏳ Não iniciado
+**Status:** ✅ CONCLUÍDO
+
+**Implementação:** 
+- `src/config/field-mappings.json` - 10 campos mapeados com metadados completos
+- `src/config/field-mappings-loader.ts` - FieldMappingsLoader class com:
+  - `load()` para carregar e cachear mappings
+  - `getAvailableFields()` para listar campos
+  - `fieldExists()` para validação
+  - `getPresets()` com 4 presets prontos (sprint, bugs, features, basic)
+  - `generateSchemaMarkdown()` para gerar documentação de schema
+  - Filtros: `getFieldsByType()`, `getEnumFields()`
+- Integrado em `src/main.ts` para carregar no startup
+- Atualizado `src/interfaces/jira-types.ts` com interfaces FieldMapping e FieldMappings
 
 ---
 

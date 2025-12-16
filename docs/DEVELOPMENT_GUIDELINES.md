@@ -75,6 +75,12 @@ npm run analyze
 - Sistema funcionando após cada tarefa
 - Validação: tickets extraídos == web interface
 - 1 commit por tarefa validada
+- Build e testes devem passar: `npm run build`
+
+### **JSON Configuration (Field Mappings)**
+- Alterações em `src/config/field-mappings.json` requerem apenas reload
+- Usar `FieldMappingsLoader` para carregar e validar campos
+- Sempre copiar JSON para `dist/config/` após build
 
 ## Regras Fundamentais
 

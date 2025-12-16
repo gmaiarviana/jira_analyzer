@@ -69,10 +69,20 @@ JIRA Analyzer é uma ferramenta CLI que extrai dados do JIRA e gera prompts rico
 - Coleta JQL, seleção de campos, escolhas de presets
 - Valida entrada do usuário
 
-### 2. Mapeamento de Campos (`config/field-mappings.json`)
-- Mapeia IDs de campos customizados do JIRA para nomes semânticos
-- Inclui informações de tipo e descrições
-- Define presets de campos (Sprint, Bugs, Features)
+### 2. Mapeamento de Campos (`config/field-mappings.json` + `config/field-mappings-loader.ts`)
+- **JSON**: Mapeia IDs de campos customizados do JIRA para nomes semânticos
+  - Inclui: `jiraField`, `type`, `description`, `nullable`, `values`
+  - 10 campos críticos: storyPoints, team, sprint, epic, rootCause, severity, acceptanceCriteria, parentTask, subtasksCount, progress
+  - Define presets de campos (Sprint, Bugs, Features, Basic)
+
+- **Loader (TypeScript)**: Classe FieldMappingsLoader com métodos utilitários:
+  - `load()`: Carrega e cacheia mappings
+  - `getAvailableFields()`: Lista todos os campos
+  - `fieldExists()`: Valida existência
+  - `getFieldsByType()`: Filtra por tipo de dado
+  - `getEnumFields()`: Retorna campos com valores predefinidos
+  - `getPresets()`: 4 presets prontos para uso
+  - `generateSchemaMarkdown()`: Gera documentação descritiva para prompts
 
 ### 3. Cliente JIRA (`jira-client.ts`)
 - Cliente HTTP baseado em Axios
@@ -82,8 +92,8 @@ JIRA Analyzer é uma ferramenta CLI que extrai dados do JIRA e gera prompts rico
 
 ### 4. Extrator de Dados (`data-extractor.ts`)
 - Normaliza respostas da API JIRA
-- Mapeia campos customizados usando field-mappings.json
-- Extrai apenas campos solicitados
+- **Integração com Field Mappings**: Mapeia campos customizados usando FieldMappingsLoader
+- Extrai apenas campos solicitados (quando disponível em versões futuras)
 - Calcula estatísticas (distribuição de status, totais de story points)
 
 ### 5. Gerenciador de Arquivos (`file-manager.ts`)
@@ -94,6 +104,7 @@ JIRA Analyzer é uma ferramenta CLI que extrai dados do JIRA e gera prompts rico
 
 ### 6. Fluxo Principal (`main.ts`)
 - Ponto de entrada e orquestração
+- **Carrega Field Mappings** no startup (FieldMappingsLoader.load())
 - Loop interativo (consultar → extrair → gerar prompt → repetir)
 - Tratamento de erros e feedback ao usuário
 
