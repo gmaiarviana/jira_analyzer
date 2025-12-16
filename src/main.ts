@@ -4,6 +4,7 @@ import { DataExtractor } from './core/data-extractor.js';
 import { InputHandler } from './utils/input-handler.js';
 import { FileManager } from './utils/file-manager.js';
 import { loadJiraConfig, getMaxTickets, isDebugMode } from './utils/config.js';
+import { FieldMappingsLoader } from './config/field-mappings-loader.js';
 
 // Load environment variables
 dotenv.config();
@@ -26,6 +27,10 @@ async function main() {
         }
         
         console.log('✅ Configuration loaded successfully');
+        
+        // Load field mappings
+        FieldMappingsLoader.load();
+        console.log(`📋 Field mappings available: ${FieldMappingsLoader.getAvailableFields().length} fields`);
         
         // Initialize JIRA client
         const jiraClient = new JiraClient(jiraConfig);

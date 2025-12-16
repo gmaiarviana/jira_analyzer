@@ -29,6 +29,18 @@ export interface JiraAuthResponse {
   active: boolean;
 }
 
+export interface FieldMapping {
+  jiraField: string;
+  type: 'number' | 'string' | 'date' | 'object' | 'array' | 'boolean';
+  description: string;
+  nullable: boolean;
+  values: string[] | null;
+}
+
+export interface FieldMappings {
+  [key: string]: FieldMapping;
+}
+
 export interface ExtractedData {
   timestamp: string;
   query: string;
@@ -36,4 +48,5 @@ export interface ExtractedData {
   extractedAt: string;
   maxResults: number;
   tickets: JiraTicket[];
+  fieldMappingsUsed?: string[];
 }

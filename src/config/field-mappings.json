@@ -1,0 +1,72 @@
+{
+  "storyPoints": {
+    "jiraField": "customfield_10016",
+    "type": "number",
+    "description": "Esforço estimado em story points (1-13)",
+    "nullable": true,
+    "values": null
+  },
+  "team": {
+    "jiraField": "customfield_20345",
+    "type": "string",
+    "description": "Time de entrega (Squad)",
+    "nullable": false,
+    "values": ["Aurora", "Phoenix", "Titan", "Nova", "Sigma"]
+  },
+  "sprint": {
+    "jiraField": "customfield_10021",
+    "type": "string",
+    "description": "Sprint atual ou futuro do ticket",
+    "nullable": true,
+    "values": null
+  },
+  "epic": {
+    "jiraField": "customfield_10020",
+    "type": "string",
+    "description": "Epic ou feature que agrupa o trabalho",
+    "nullable": true,
+    "values": null
+  },
+  "rootCause": {
+    "jiraField": "customfield_30210",
+    "type": "string",
+    "description": "Causa raiz identificada (para bugs)",
+    "nullable": true,
+    "values": ["Código", "Configuração", "Dados", "Documentação", "Infraestrutura", "Desconhecido"]
+  },
+  "severity": {
+    "jiraField": "customfield_30211",
+    "type": "string",
+    "description": "Nível de severidade do impacto",
+    "nullable": true,
+    "values": ["Blocker", "Critical", "Major", "Minor", "Trivial"]
+  },
+  "acceptanceCriteria": {
+    "jiraField": "customfield_10019",
+    "type": "string",
+    "description": "Critérios de aceitação da user story",
+    "nullable": true,
+    "values": null
+  },
+  "parentTask": {
+    "jiraField": "customfield_10022",
+    "type": "string",
+    "description": "Ticket pai (para subtasks)",
+    "nullable": true,
+    "values": null
+  },
+  "subtasksCount": {
+    "jiraField": "subtasks",
+    "type": "array",
+    "description": "Número e lista de subtasks associadas",
+    "nullable": true,
+    "values": null
+  },
+  "progress": {
+    "jiraField": "customfield_10025",
+    "type": "number",
+    "description": "Percentual de progresso (0-100)",
+    "nullable": true,
+    "values": null
+  }
+}
