@@ -23,12 +23,21 @@ cp .env.example .env
 npm run analyze
 ```
 
-### 4. Fluxo de Trabalho
-1. **Digite sua consulta JQL** (ex: `assignee = currentUser()`)
-2. **Defina sua pergunta de análise** (ex: "Analise performance do sprint")
-3. **Aguarde a extração** dos dados do JIRA
-4. **Copie o prompt gerado** e cole no GitHub Copilot Chat
-5. **Use a análise** do Copilot para insights acionáveis
+## Como Funciona
+
+1. **Conectar ao JIRA**: Autentique usando suas credenciais JIRA (configuradas em `.env`)
+2. **Extrair Dados**: Execute CLI interativa com consultas JQL e seleção de campos
+3. **Gerar Prompt de Análise**: Sistema cria um prompt rico com descrições de esquema
+4. **Analisar com Copilot**: Copie o prompt gerado e cole no GitHub Copilot
+5. **Iterar**: Extraia novos dados com diferentes consultas sem reiniciar a CLI
+
+### Principais Recursos
+
+- 🔄 **Consultas Dinâmicas**: Altere JQL sem reiniciar
+- 🎯 **Extração Seletiva**: Escolha quais campos extrair (story points, equipe, sprint, etc)
+- 📋 **Metadados Ricos**: Prompts gerados incluem descrições de campos e esquema
+- 💬 **Pronto para Copilot**: Prompts otimizados para análise com GitHub Copilot
+- 📊 **Presets Inteligentes**: Conjuntos de campos pré-configurados para análises comuns (Sprint, Bugs, Features)
 
 ## 📁 Arquivos Gerados
 
@@ -58,36 +67,88 @@ DEBUG=false            # Logs detalhados
 2. Crie novo token com permissões de leitura
 3. Copie o token para JIRA_API_TOKEN
 
-## 📊 Exemplos de Uso
+## Uso
 
-### Consultas JQL Comuns
-```jql
-# Meus tickets em andamento
-assignee = currentUser() AND status = "In Progress"
+### Fluxo Básico
+```bash
+# Iniciar CLI interativa
+npm run analyze
 
-# Bugs críticos em aberto
-priority = "Critical" AND type = "Bug" AND status != "Done"
+# Escolher ação
+> [1] Nova consulta
+> [2] Sair
 
-# Sprint atual
-project = "MYPROJECT" AND sprint in openSprints()
+# Digite sua JQL
+> JQL: project = TSW AND sprint in openSprints()
 
-# Tickets antigos não resolvidos
-created <= -30d AND status != "Done"
+# Selecione campos (ou pressione Enter para padrão)
+> Campos: storyPoints, team, sprint
+# Ou escolha preset: [1] Sprint [2] Bugs [3] Features [4] Personalizado
+
+# Dados extraídos!
+✅ 465 tickets extraídos
+📋 Prompt gerado: prompts/copilot-prompt-2025-12-16T15-36-24.md
+💾 Dados salvos: data/raw/jira-data-2025-12-16T15-36-24.json
+
+# Copie o prompt para o GitHub Copilot e faça perguntas:
+- "Quantos story points a equipe Aurora completou?"
+- "Qual é o tempo médio de ciclo?"
+- "Quais tarefas estão abertas há mais tempo?"
+
+# Continue com consulta diferente
+> [1] Nova consulta (JQL diferente)
+> [2] Mesma consulta, campos diferentes
+> [3] Sair
 ```
 
-### Perguntas de Análise
-- "Analise a distribuição de workload da equipe e identifique sobrecarga"
-- "Identifique padrões em bugs críticos e sugira melhorias de processo"
-- "Avalie a performance do sprint atual e gargalos"
-- "Analise tickets com maior tempo de resolução"
+### Presets de Campos
 
-## 🤖 Uso com GitHub Copilot
+**Análise de Sprint** (padrão)
+- Story points, equipe, status, responsável, sprint
 
-1. **Execute**: `npm run analyze`
-2. **Abra**: `prompts/copilot-prompt-{timestamp}.md`
-3. **Copie tudo** e cole no GitHub Copilot Chat
-4. **Obtenha análise** estruturada automaticamente
-5. **Documente**: Use `responses/copilot-response-{timestamp}.md`
+**Análise de Bugs**
+- Prioridade, severidade, relator, causa raiz, data de criação
+
+**Análise de Features**
+- Epic, tarefa pai, subtarefas, progresso, rótulos
+
+## Mapeamento de Campos
+
+O sistema mapeia campos customizados do JIRA para nomes legíveis. Configuração em `src/config/field-mappings.json`.
+
+Campos comuns:
+- `storyPoints` → Estimativa de story points
+- `team` → Equipe de entrega/squad
+- `sprint` → Objeto de sprint Scrum
+- `epic` → Vínculo de epic
+- `severity` → Severidade de bug
+- `rootCause` → Análise de causa raiz
+
+Os prompts gerados incluem descrições completas do esquema para que o Copilot entenda sua estrutura de dados.
+
+## Estrutura do Projeto
+
+```
+jira-analyzer/
+├── src/
+│   ├── main.ts              # Ponto de entrada (loop interativo)
+│   ├── core/
+│   │   ├── jira-client.ts   # Cliente da API JIRA
+│   │   └── data-extractor.ts # Normalização de dados
+│   ├── config/
+│   │   └── field-mappings.json # Mapeamento de campos customizados
+│   ├── interfaces/
+│   │   └── jira-types.ts    # Tipos TypeScript
+│   └── utils/
+│       ├── config.ts        # Variáveis de ambiente
+│       ├── file-manager.ts  # Operações de I/O de arquivo
+│       └── input-handler.ts # Manipulação de entrada CLI
+├── data/
+│   ├── raw/                 # Dados JSON extraídos
+│   └── history/             # Histórico de consultas
+├── prompts/                 # Prompts Copilot gerados
+└── responses/               # Templates de análise
+```
 
 ## 🛠️ Troubleshooting
 
@@ -132,6 +193,10 @@ src/
 ```
 
 Ver `docs/ARCHITECTURE.md` para detalhes técnicos.
+
+## Roteiro
+
+Veja [ROADMAP.md](ROADMAP.md) para recursos planejados e melhorias.
 
 ## 📄 Licença
 
