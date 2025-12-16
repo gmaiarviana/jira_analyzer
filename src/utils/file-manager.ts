@@ -1,6 +1,7 @@
 import { writeFile, mkdir } from 'fs/promises';
 import * as path from 'path';
 import { ExtractedData, JiraTicket } from '../interfaces/jira-types.js';
+import { FieldMappingsLoader } from '../config/field-mappings-loader.js';
 
 export class FileManager {
   
@@ -74,6 +75,8 @@ export class FileManager {
     const statusDistribution = this.calculateStatusDistribution(data.tickets);
     const priorityDistribution = this.calculatePriorityDistribution(data.tickets);
     const assigneeDistribution = this.calculateAssigneeDistribution(data.tickets);
+    const fieldsUsed = data.fieldsUsed.join(', ');
+    const schemaSection = this.buildSchemaSection(data);
     
     return `# Análise de Tickets JIRA - ${data.timestamp}
 
@@ -85,10 +88,13 @@ ${analysisQuestion}
 ${data.query}
 \`\`\`
 
+${schemaSection}
+
 ## Resumo Estatístico
 - **Total encontrado**: ${data.totalTickets} tickets
 - **Analisados**: ${data.tickets.length} tickets  
 - **Extraído em**: ${new Date(data.extractedAt).toLocaleString('pt-BR')}
+- **Campos extraídos**: ${fieldsUsed}
 
 **Distribuições:**
 - **Status**: ${statusDistribution}
@@ -99,6 +105,18 @@ ${data.query}
 \`\`\`json
 ${JSON.stringify(data.tickets, null, 2)}
 \`\`\`
+
+## Suas Capacidades
+- Calcular totais, médias e distribuições (status, prioridade, time, sprint)
+- Agrupar por time, sprint, epic, status e tipo
+- Identificar gargalos, anomalias e outliers
+- Comparar períodos, times ou sprints
+
+## Exemplos de Perguntas
+- Quais times concentram mais story points e bugs críticos?
+- Quais tickets estão bloqueados há mais tempo?
+- Como está a distribuição de tarefas por sprint e status?
+- Quais epics ou features têm maior volume em aberto?
 
 ## Solicitação
 Analise os dados acima e forneça insights sobre: **${analysisQuestion}**
@@ -116,6 +134,63 @@ Considere os seguintes aspectos na sua análise:
 - Sugestões práticas e acionáveis
 
 **IMPORTANTE**: Esta é uma análise completa e independente. Use apenas os dados fornecidos acima.`;
+  }
+
+  /**
+   * Build schema section describing base fields and selected mapped fields
+   */
+  private buildSchemaSection(data: ExtractedData): string {
+    const baseSchema = [
+      '- **key** (string): Identificador único do ticket (ex: TSW-1234)',
+      '- **summary** (string): Título curto do ticket',
+      '- **description** (string): Descrição detalhada',
+      '- **status** (string): Estado atual (ex: To Do, In Progress, Done, Blocked)',
+      '- **priority** (string): Prioridade (Highest, High, Medium, Low, Lowest)',
+      '- **assignee** (string | null): Responsável atual',
+      '- **reporter** (string): Quem criou o ticket',
+      '- **created** (date): Data de criação (ISO)',
+      '- **updated** (date): Última atualização (ISO)',
+      '- **issueType** (string): Tipo do ticket (Story, Bug, Task, Sub-task, Epic)'
+    ];
+
+    const mappedFields = data.fieldsUsed.filter((field) => FieldMappingsLoader.fieldExists(field));
+
+    const mappedSchema = mappedFields.map((fieldKey) => {
+      const mapping = FieldMappingsLoader.getMapping(fieldKey);
+      if (!mapping) return '';
+
+      let line = `- **${fieldKey}** (${mapping.type}): ${mapping.description}`;
+
+      if (mapping.values && mapping.values.length > 0) {
+        line += ` | Valores: ${mapping.values.join(', ')}`;
+      }
+
+      if (mapping.nullable) {
+        line += ' | (nullable)';
+      }
+
+      if (mapping.type === 'object' && fieldKey === 'sprint') {
+        line += ' | Campos: name, state, startDate, endDate';
+      }
+
+      if (fieldKey === 'subtasksCount') {
+        line += ' | Lista de subtasks: { key, summary }';
+      }
+
+      return line;
+    }).filter(Boolean);
+
+    const mappedSection = mappedSchema.length > 0
+      ? mappedSchema.join('\n')
+      : '- (nenhum campo custom solicitado)';
+
+    return `## Schema dos Dados
+
+Campos base (sempre presentes):
+${baseSchema.join('\n')}
+
+Campos solicitados nesta extração:
+${mappedSection}`;
   }
 
   /**

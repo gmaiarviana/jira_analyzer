@@ -62,7 +62,7 @@ export class JiraClient {
   /**
    * Execute JQL search (basic implementation for validation)
    */
-  async searchIssues(jql: string, maxResults: number = 50): Promise<JiraSearchResponse> {
+  async searchIssues(jql: string, maxResults: number = 50, fields?: string[]): Promise<JiraSearchResponse> {
     try {
       console.log(`🔍 Executing JQL: ${jql}`);
       console.log(`📊 Max results: ${maxResults}`);
@@ -71,7 +71,8 @@ export class JiraClient {
         params: {
           jql,
           maxResults,
-          startAt: 0
+          startAt: 0,
+          fields
         }
       });
 

@@ -4,7 +4,9 @@ export interface JiraCredentials {
   apiToken: string;
 }
 
-export interface JiraTicket {
+export type TicketFieldValue = string | number | boolean | null | Record<string, unknown> | unknown[];
+
+export interface BaseTicketFields {
   key: string;
   summary: string;
   description: string;
@@ -15,6 +17,8 @@ export interface JiraTicket {
   created: string;
   updated: string;
 }
+
+export type JiraTicket = BaseTicketFields & Record<string, TicketFieldValue>;
 
 export interface JiraSearchResponse {
   total: number;
@@ -48,5 +52,6 @@ export interface ExtractedData {
   extractedAt: string;
   maxResults: number;
   tickets: JiraTicket[];
+  fieldsUsed: string[];
   fieldMappingsUsed?: string[];
 }

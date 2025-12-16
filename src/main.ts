@@ -45,12 +45,16 @@ async function main() {
         
         console.log('🔧 JIRA Client ready for data extraction');
         
-        // Interactive input for JQL and analysis question
-        const jqlQuery = await inputHandler.askJQL();
-        const analysisQuestion = await inputHandler.askAnalysisQuestion();
+        // Inputs (env overrides allow non-interactive runs)
+        const jqlQuery = process.env.JQL ?? await inputHandler.askJQL();
+        const fieldsResult = getFieldsSelection(inputHandler);
+        const fields = fieldsResult.fields;
+        const presetUsed = fieldsResult.presetUsed;
+        const analysisQuestion = process.env.ANALYSIS_QUESTION ?? await inputHandler.askAnalysisQuestion();
         
         console.log(`\n📋 Summary:`);
         console.log(`   JQL: ${jqlQuery}`);
+        console.log(`   Fields: ${fields.join(', ')} (preset: ${presetUsed})`);
         console.log(`   Analysis: ${analysisQuestion}`);
         console.log(`   Max tickets: ${maxTickets}`);
         
@@ -58,7 +62,7 @@ async function main() {
         const dataExtractor = new DataExtractor(jiraClient);
         
         // Extract data
-        const extractedData = await dataExtractor.extractTickets(jqlQuery, maxTickets);
+        const extractedData = await dataExtractor.extractTickets(jqlQuery, maxTickets, fields);
         
         // Save files
         const dataFile = await fileManager.saveExtractedData(extractedData);
@@ -88,3 +92,34 @@ main().catch((error) => {
     console.error('💥 Unexpected error:', error.message);
     process.exit(1);
 });
+
+function getFieldsSelection(inputHandler: InputHandler): { fields: string[]; presetUsed: string } {
+    // Env override: explicit field list (comma separated)
+    const envFields = process.env.FIELDS;
+    const envPreset = process.env.FIELDS_PRESET;
+
+    if (envFields || envPreset) {
+        if (envPreset && FieldMappingsLoader.presetExists(envPreset)) {
+            return { fields: FieldMappingsLoader.getPresetFields(envPreset), presetUsed: envPreset };
+        }
+
+        if (envFields) {
+            const parsed = envFields
+                .split(',')
+                .map((f) => f.trim())
+                .filter(Boolean);
+
+            const baseFields = ['key', 'summary', 'status'];
+            const invalid = parsed.filter((field) => !baseFields.includes(field) && !FieldMappingsLoader.fieldExists(field));
+
+            if (invalid.length > 0) {
+                throw new Error(`FIELDS contém campos inválidos: ${invalid.join(', ')}`);
+            }
+
+            return { fields: Array.from(new Set(parsed)), presetUsed: 'env-custom' };
+        }
+    }
+
+    // Interactive fallback
+    return inputHandler.askFields();
+}

@@ -15,10 +15,10 @@
   },
   "sprint": {
     "jiraField": "customfield_10021",
-    "type": "string",
-    "description": "Sprint atual ou futuro do ticket",
+    "type": "object",
+    "description": "Sprint Scrum (name, state, startDate, endDate)",
     "nullable": true,
-    "values": null
+    "values": ["active", "closed", "future"]
   },
   "epic": {
     "jiraField": "customfield_10020",
@@ -67,6 +67,41 @@
     "type": "number",
     "description": "Percentual de progresso (0-100)",
     "nullable": true,
+    "values": null
+  },
+  "priority": {
+    "jiraField": "priority",
+    "type": "string",
+    "description": "Prioridade do ticket",
+    "nullable": false,
+    "values": ["Highest", "High", "Medium", "Low", "Lowest"]
+  },
+  "issueType": {
+    "jiraField": "issuetype",
+    "type": "string",
+    "description": "Tipo do ticket (Story, Bug, Task, Sub-task, Epic)",
+    "nullable": false,
+    "values": ["Story", "Bug", "Task", "Sub-task", "Epic"]
+  },
+  "status": {
+    "jiraField": "status",
+    "type": "string",
+    "description": "Estado atual do ticket",
+    "nullable": false,
+    "values": ["To Do", "In Progress", "In Review", "Blocked", "Done"]
+  },
+  "assignee": {
+    "jiraField": "assignee",
+    "type": "string",
+    "description": "Responsável atual pelo ticket",
+    "nullable": true,
+    "values": null
+  },
+  "reporter": {
+    "jiraField": "reporter",
+    "type": "string",
+    "description": "Pessoa que reportou o ticket",
+    "nullable": false,
     "values": null
   }
 }

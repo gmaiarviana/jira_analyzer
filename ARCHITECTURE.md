@@ -72,7 +72,7 @@ JIRA Analyzer é uma ferramenta CLI que extrai dados do JIRA e gera prompts rico
 ### 2. Mapeamento de Campos (`config/field-mappings.json` + `config/field-mappings-loader.ts`)
 - **JSON**: Mapeia IDs de campos customizados do JIRA para nomes semânticos
   - Inclui: `jiraField`, `type`, `description`, `nullable`, `values`
-  - 10 campos críticos: storyPoints, team, sprint, epic, rootCause, severity, acceptanceCriteria, parentTask, subtasksCount, progress
+  - Campos críticos cobertos: storyPoints, team, sprint, epic, rootCause, severity, acceptanceCriteria, parentTask, subtasksCount, progress, priority, issueType, status, assignee, reporter
   - Define presets de campos (Sprint, Bugs, Features, Basic)
 
 - **Loader (TypeScript)**: Classe FieldMappingsLoader com métodos utilitários:
@@ -93,19 +93,19 @@ JIRA Analyzer é uma ferramenta CLI que extrai dados do JIRA e gera prompts rico
 ### 4. Extrator de Dados (`data-extractor.ts`)
 - Normaliza respostas da API JIRA
 - **Integração com Field Mappings**: Mapeia campos customizados usando FieldMappingsLoader
-- Extrai apenas campos solicitados (quando disponível em versões futuras)
+- Extrai apenas campos solicitados (presets ou lista custom) e adiciona base (key, summary, status)
 - Calcula estatísticas (distribuição de status, totais de story points)
 
 ### 5. Gerenciador de Arquivos (`file-manager.ts`)
 - Salva dados JSON brutos em `data/raw/`
-- Gera prompts Copilot com esquema em `prompts/`
+- Gera prompts Copilot com schema descritivo (tipos, enums, nullability, estrutura de sprint/subtasks)
 - Cria templates de resposta em `responses/`
 - Mantém histórico de consultas em `data/history/`
 
 ### 6. Fluxo Principal (`main.ts`)
 - Ponto de entrada e orquestração
 - **Carrega Field Mappings** no startup (FieldMappingsLoader.load())
-- Loop interativo (consultar → extrair → gerar prompt → repetir)
+- Suporta modo interativo ou não-interativo via variáveis de ambiente: `JQL`, `FIELDS_PRESET`/`FIELDS`, `ANALYSIS_QUESTION`
 - Tratamento de erros e feedback ao usuário
 
 ## Fluxo de Dados

@@ -1,4 +1,5 @@
 import * as readline from 'readline';
+import { FieldMappingsLoader } from '../config/field-mappings-loader.js';
 
 export class InputHandler {
   private rl: readline.Interface;
@@ -57,6 +58,67 @@ export class InputHandler {
     }
     
     return question;
+  }
+
+  /**
+   * Ask which fields should be extracted (supports presets)
+   */
+  async askFields(): Promise<{ fields: string[]; presetUsed: string }> {
+    const presets = FieldMappingsLoader.getPresets();
+    const presetNames = Object.keys(presets);
+
+    console.log('\n🎛️  Campos para extrair (deixe vazio para preset básico)');
+    presetNames.forEach((name, index) => {
+      const fields = presets[name].join(', ');
+      console.log(`  [${index + 1}] ${name} → ${fields}`);
+    });
+    console.log('  [Custom] Digite lista separada por vírgula (ex: storyPoints, team, sprint)');
+
+    const answer = await this.askQuestion('\n📌 Campos ou número do preset: ');
+
+    // Default: basic preset
+    if (!answer) {
+      return {
+        fields: presets.basic ?? [],
+        presetUsed: 'basic'
+      };
+    }
+
+    const numericOption = Number(answer);
+    if (!Number.isNaN(numericOption) && numericOption >= 1 && numericOption <= presetNames.length) {
+      const presetName = presetNames[numericOption - 1];
+      return {
+        fields: presets[presetName],
+        presetUsed: presetName
+      };
+    }
+
+    // Custom list
+    const parsed = answer
+      .split(',')
+      .map((field) => field.trim())
+      .filter(Boolean);
+
+    if (parsed.length === 0) {
+      throw new Error('Lista de campos vazia. Use Enter para preset básico ou informe os campos.');
+    }
+
+    // Allow base fields even if not mapped (key/summary/status) and validate mapped ones
+    const baseFields = ['key', 'summary', 'status'];
+    const invalid = parsed.filter(
+      (field) => !baseFields.includes(field) && !FieldMappingsLoader.fieldExists(field)
+    );
+
+    if (invalid.length > 0) {
+      throw new Error(`Campos inválidos: ${invalid.join(', ')}`);
+    }
+
+    const deduped = Array.from(new Set(parsed));
+
+    return {
+      fields: deduped,
+      presetUsed: 'custom'
+    };
   }
 
   /**

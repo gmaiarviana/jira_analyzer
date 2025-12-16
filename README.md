@@ -20,24 +20,31 @@ cp .env.example .env
 
 ### 3. Uso
 ```bash
+# Modo interativo
+npm run analyze
+
+# Modo não-interativo (útil para automação/CI)
+JQL="project = TSW AND statusCategory != Done" \
+FIELDS_PRESET=basic \
+ANALYSIS_QUESTION="Quantos itens abertos tem?" \
 npm run analyze
 ```
 
 ## Como Funciona
 
-1. **Conectar ao JIRA**: Autentique usando suas credenciais JIRA (configuradas em `.env`)
-2. **Extrair Dados**: Execute CLI interativa com consultas JQL e seleção de campos
-3. **Gerar Prompt de Análise**: Sistema cria um prompt rico com descrições de esquema
+1. **Conectar ao JIRA**: Autentique usando credenciais JIRA (configuradas em `.env`)
+2. **Extrair Dados**: Execute o CLI (interativo ou via variáveis de ambiente) com JQL e seleção de campos/preset
+3. **Gerar Prompt de Análise**: Sistema cria um prompt rico com schema descritivo dos campos extraídos
 4. **Analisar com Copilot**: Copie o prompt gerado e cole no GitHub Copilot
-5. **Iterar**: Extraia novos dados com diferentes consultas sem reiniciar a CLI
+5. **Iterar**: Rode novamente com JQL ou campos diferentes
 
 ### Principais Recursos
 
-- 🔄 **Consultas Dinâmicas**: Altere JQL sem reiniciar
-- 🎯 **Extração Seletiva**: Escolha quais campos extrair (story points, equipe, sprint, etc)
-- 📋 **Metadados Ricos**: Prompts gerados incluem descrições de campos e esquema
-- 💬 **Pronto para Copilot**: Prompts otimizados para análise com GitHub Copilot
-- 📊 **Presets Inteligentes**: Conjuntos de campos pré-configurados para análises comuns (Sprint, Bugs, Features)
+- 🎯 **Extração Seletiva**: Escolha campos (presets ou lista) e o cliente só busca o necessário
+- 📋 **Schema no Prompt**: Prompts trazem seções com tipos, enums e nullability dos campos
+- 🧭 **Presets Inteligentes**: Sprint, Bugs, Features, Basic
+- 🔌 **Modo Não-Interativo**: Defina `JQL`, `FIELDS_PRESET` ou `FIELDS`, e `ANALYSIS_QUESTION` para automatizar
+- 💬 **Pronto para Copilot**: Prompts estruturados para copiar/colar
 
 ## 📁 Arquivos Gerados
 
@@ -103,14 +110,10 @@ npm run analyze
 
 ### Presets de Campos
 
-**Análise de Sprint** (padrão)
-- Story points, equipe, status, responsável, sprint
-
-**Análise de Bugs**
-- Prioridade, severidade, relator, causa raiz, data de criação
-
-**Análise de Features**
-- Epic, tarefa pai, subtarefas, progresso, rótulos
+- **Sprint**: storyPoints, team, status, assignee, sprint, issueType, priority
+- **Bugs**: priority, severity, reporter, rootCause, status, assignee, issueType
+- **Features**: epic, parentTask, subtasksCount, acceptanceCriteria, progress, status, issueType
+- **Basic**: status, priority, assignee, reporter, team, issueType (padrão)
 
 ## Mapeamento de Campos
 

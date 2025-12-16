@@ -151,10 +151,10 @@ export class FieldMappingsLoader {
    */
   static getPresets(): { [preset: string]: string[] } {
     return {
-      sprint: ['storyPoints', 'team', 'status', 'assignee', 'sprint'],
-      bugs: ['priority', 'severity', 'reporter', 'rootCause', 'status'],
-      features: ['epic', 'parentTask', 'subtasksCount', 'acceptanceCriteria', 'progress'],
-      basic: ['status', 'priority', 'assignee', 'reporter', 'team']
+      sprint: ['storyPoints', 'team', 'status', 'assignee', 'sprint', 'issueType', 'priority'],
+      bugs: ['priority', 'severity', 'reporter', 'rootCause', 'status', 'assignee', 'issueType'],
+      features: ['epic', 'parentTask', 'subtasksCount', 'acceptanceCriteria', 'progress', 'status', 'issueType'],
+      basic: ['status', 'priority', 'assignee', 'reporter', 'team', 'issueType']
     };
   }
 
