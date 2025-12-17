@@ -278,4 +278,48 @@ ${mappedSection}`;
     
     return `${totalAssignees} pessoas, top: ${topAssigneeName}(${topAssigneeCount})`;
   }
+
+  /**
+   * Save query execution to history
+   */
+  async saveQueryToHistory(data: ExtractedData, promptPath: string): Promise<string> {
+    await this.ensureDirectories();
+    
+    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const filename = `queries-${date}.json`;
+    const filepath = path.join('data', 'history', filename);
+    
+    // Ensure history directory exists
+    await mkdir('data/history', { recursive: true });
+
+    // Load existing history or start new
+    let history: any[] = [];
+    try {
+      const existingContent = await import('fs/promises').then(fs => fs.readFile(filepath, 'utf8'));
+      history = JSON.parse(existingContent);
+    } catch {
+      // File doesn't exist yet, start fresh
+      history = [];
+    }
+
+    // Add new entry
+    const entry = {
+      timestamp: data.timestamp,
+      jql: data.query,
+      fields: data.fieldsUsed,
+      ticketCount: data.tickets.length,
+      dataPath: path.join('data', 'raw', `jira-data-${data.timestamp}.json`),
+      promptPath: promptPath,
+      extractedAt: data.extractedAt
+    };
+
+    history.push(entry);
+
+    // Write updated history
+    await writeFile(filepath, JSON.stringify(history, null, 2), 'utf8');
+
+    console.log(`📜 Query salvo no histórico: ${filepath}`);
+
+    return filepath;
+  }
 }

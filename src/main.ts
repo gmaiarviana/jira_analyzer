@@ -9,6 +9,13 @@ import { FieldMappingsLoader } from './config/field-mappings-loader.js';
 // Load environment variables
 dotenv.config();
 
+interface QueryContext {
+  jqlQuery: string;
+  fields: string[];
+  presetUsed: string;
+  analysisQuestion: string;
+}
+
 async function main() {
     console.log('🎯 JIRA Analyzer - Starting...');
     
@@ -45,39 +52,31 @@ async function main() {
         
         console.log('🔧 JIRA Client ready for data extraction');
         
-        // Inputs (env overrides allow non-interactive runs)
-        const jqlQuery = process.env.JQL ?? await inputHandler.askJQL();
-        const fieldsResult = await getFieldsSelection(inputHandler);
-        const fields = fieldsResult.fields;
-        const presetUsed = fieldsResult.presetUsed;
-        const analysisQuestion = process.env.ANALYSIS_QUESTION ?? await inputHandler.askAnalysisQuestion();
-        
-        console.log(`\n📋 Summary:`);
-        console.log(`   JQL: ${jqlQuery}`);
-        console.log(`   Fields: ${fields.join(', ')} (preset: ${presetUsed})`);
-        console.log(`   Analysis: ${analysisQuestion}`);
-        console.log(`   Max tickets: ${maxTickets}`);
-        
         // Initialize data extractor
         const dataExtractor = new DataExtractor(jiraClient);
         
-        // Extract data
-        const extractedData = await dataExtractor.extractTickets(jqlQuery, maxTickets, fields);
+        // Check if running in non-interactive mode (env vars provided)
+        const isNonInteractive = process.env.JQL && process.env.ANALYSIS_QUESTION;
         
-        // Save files
-        const dataFile = await fileManager.saveExtractedData(extractedData);
-        const promptFile = await fileManager.savePromptFile(extractedData, analysisQuestion);
-        const templateFile = await fileManager.saveResponseTemplate(extractedData);
-        
-        console.log(`\n🎉 Extraction completed successfully!`);
-        console.log(`📁 Files generated:`);
-        console.log(`   📊 Data: ${dataFile}`);
-        console.log(`   📝 Copilot Prompt: ${promptFile}`);
-        console.log(`   📋 Response Template: ${templateFile}`);
-        console.log(`\n💡 Next steps:`);
-        console.log(`   1. Open ${promptFile}`);
-        console.log(`   2. Copy content and paste in GitHub Copilot Chat`);
-        console.log(`   3. Use generated analysis to fill ${templateFile}`);
+        if (isNonInteractive) {
+            // Non-interactive mode: single extraction and exit
+            const jqlQuery = process.env.JQL!;
+            const fieldsResult = await getFieldsSelection(inputHandler);
+            const analysisQuestion = process.env.ANALYSIS_QUESTION!;
+            
+            await executeQuery(
+                jqlQuery,
+                fieldsResult.fields,
+                fieldsResult.presetUsed,
+                analysisQuestion,
+                dataExtractor,
+                fileManager,
+                maxTickets
+            );
+        } else {
+            // Interactive mode: show menu and loop
+            await interactiveLoop(inputHandler, dataExtractor, fileManager, maxTickets);
+        }
         
     } catch (error: any) {
         console.error('💥 Error:', error.message);
@@ -87,11 +86,135 @@ async function main() {
     }
 }
 
-// Handle errors gracefully
-main().catch((error) => {
-    console.error('💥 Unexpected error:', error.message);
-    process.exit(1);
-});
+/**
+ * Interactive loop for multiple queries
+ */
+async function interactiveLoop(
+    inputHandler: InputHandler,
+    dataExtractor: DataExtractor,
+    fileManager: FileManager,
+    maxTickets: number
+): Promise<void> {
+    let shouldContinue = true;
+    let lastContext: QueryContext | null = null;
+
+    while (shouldContinue) {
+        const menuChoice = await inputHandler.askMainMenu();
+
+        if (menuChoice === 'exit') {
+            console.log('\n👋 Encerrando JIRA Analyzer. Até logo!');
+            shouldContinue = false;
+            break;
+        }
+
+        // Get initial query context
+        let context: QueryContext;
+        const jqlQuery = await inputHandler.askJQL();
+        const fieldsResult = await getFieldsSelection(inputHandler);
+        const analysisQuestion = await inputHandler.askAnalysisQuestion();
+
+        context = {
+            jqlQuery,
+            fields: fieldsResult.fields,
+            presetUsed: fieldsResult.presetUsed,
+            analysisQuestion
+        };
+
+        lastContext = context;
+
+        // Execute query
+        await executeQuery(
+            context.jqlQuery,
+            context.fields,
+            context.presetUsed,
+            context.analysisQuestion,
+            dataExtractor,
+            fileManager,
+            maxTickets
+        );
+
+        // Show loop menu
+        let loopContinues = true;
+        while (loopContinues) {
+            try {
+                const loopChoice = await inputHandler.askLoopMenu();
+
+                if (loopChoice === 'exit') {
+                    console.log('\n👋 Encerrando JIRA Analyzer. Até logo!');
+                    shouldContinue = false;
+                    loopContinues = false;
+                    break;
+                }
+
+                if (loopChoice === 'main-menu') {
+                    loopContinues = false;
+                    break;
+                }
+
+                if (loopChoice === 'new-query') {
+                    loopContinues = false;
+                    break;
+                }
+
+                if (loopChoice === 'same-query-new-fields' && lastContext) {
+                    // Same query but new fields
+                    const fieldsResult = await getFieldsSelection(inputHandler);
+                    const newContext: QueryContext = { ...lastContext, fields: fieldsResult.fields, presetUsed: fieldsResult.presetUsed };
+
+                    await executeQuery(
+                        newContext.jqlQuery,
+                        newContext.fields,
+                        newContext.presetUsed,
+                        newContext.analysisQuestion,
+                        dataExtractor,
+                        fileManager,
+                        maxTickets
+                    );
+
+                    lastContext = newContext;
+                }
+            } catch (error: any) {
+                console.error(`⚠️ ${error.message}`);
+                // Continue loop menu on error
+            }
+        }
+    }
+}
+
+/**
+ * Execute a single query and save results
+ */
+async function executeQuery(
+    jqlQuery: string,
+    fields: string[],
+    presetUsed: string,
+    analysisQuestion: string,
+    dataExtractor: DataExtractor,
+    fileManager: FileManager,
+    maxTickets: number
+): Promise<void> {
+    console.log(`\n📋 Execução:`);
+    console.log(`   JQL: ${jqlQuery}`);
+    console.log(`   Fields: ${fields.join(', ')} (preset: ${presetUsed})`);
+    console.log(`   Analysis: ${analysisQuestion}`);
+    console.log(`   Max tickets: ${maxTickets}`);
+    
+    // Extract data
+    const extractedData = await dataExtractor.extractTickets(jqlQuery, maxTickets, fields);
+    
+    // Save files
+    const dataFile = await fileManager.saveExtractedData(extractedData);
+    const promptFile = await fileManager.savePromptFile(extractedData, analysisQuestion);
+    const templateFile = await fileManager.saveResponseTemplate(extractedData);
+    const historyFile = await fileManager.saveQueryToHistory(extractedData, promptFile);
+    
+    console.log(`\n✅ Execução concluída!`);
+    console.log(`📁 Arquivos gerados:`);
+    console.log(`   📊 Data: ${dataFile}`);
+    console.log(`   📝 Copilot Prompt: ${promptFile}`);
+    console.log(`   📋 Response Template: ${templateFile}`);
+    console.log(`   📜 History: ${historyFile}`);
+}
 
 function getFieldsSelection(inputHandler: InputHandler): Promise<{ fields: string[]; presetUsed: string }> {
     // Env override: explicit field list (comma separated)
@@ -123,3 +246,9 @@ function getFieldsSelection(inputHandler: InputHandler): Promise<{ fields: strin
     // Interactive fallback
     return inputHandler.askFields();
 }
+
+// Handle errors gracefully
+main().catch((error) => {
+    console.error('💥 Unexpected error:', error.message);
+    process.exit(1);
+});

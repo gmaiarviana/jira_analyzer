@@ -130,6 +130,60 @@ export class InputHandler {
   }
 
   /**
+   * Show main menu and ask for action
+   */
+  async askMainMenu(): Promise<'new-query' | 'exit'> {
+    console.log('\n┌─────────────────────────────────┐');
+    console.log('│ JIRA Analyzer - Menu Principal  │');
+    console.log('├─────────────────────────────────┤');
+    console.log('│ [1] Nova query                  │');
+    console.log('│ [2] Sair                        │');
+    console.log('└─────────────────────────────────┘');
+
+    const answer = await this.askQuestion('\n📌 Escolha uma opção: ');
+
+    if (answer === '1') {
+      return 'new-query';
+    }
+    if (answer === '2') {
+      return 'exit';
+    }
+
+    throw new Error('Opção inválida. Digite 1 ou 2.');
+  }
+
+  /**
+   * Show post-extraction menu
+   */
+  async askLoopMenu(): Promise<'new-query' | 'same-query-new-fields' | 'main-menu' | 'exit'> {
+    console.log('\n┌──────────────────────────────────────┐');
+    console.log('│ O que deseja fazer agora?         │');
+    console.log('├──────────────────────────────────────┤');
+    console.log('│ [1] Nova query (diferente)           │');
+    console.log('│ [2] Mesma query, campos novos        │');
+    console.log('│ [3] Voltar ao menu principal         │');
+    console.log('│ [4] Sair                             │');
+    console.log('└──────────────────────────────────────┘');
+
+    const answer = await this.askQuestion('\n📌 Escolha uma opção: ');
+
+    if (answer === '1') {
+      return 'new-query';
+    }
+    if (answer === '2') {
+      return 'same-query-new-fields';
+    }
+    if (answer === '3') {
+      return 'main-menu';
+    }
+    if (answer === '4') {
+      return 'exit';
+    }
+
+    throw new Error('Opção inválida. Digite 1, 2, 3 ou 4.');
+  }
+
+  /**
    * Close the readline interface
    */
   close(): void {
