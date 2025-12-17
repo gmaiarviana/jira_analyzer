@@ -213,6 +213,35 @@ ORDER BY updated ASC
 
 ---
 
+### 11. Buscar por Texto Livre / Entender Produto
+
+**Objetivo:** Encontrar tickets relacionados a um produto, feature ou termo específico.
+
+**Query:**
+```jql
+project = TSW 
+AND (summary ~ "TermoBusca" OR description ~ "TermoBusca") 
+ORDER BY created DESC
+```
+
+**Variações:**
+```jql
+-- Apenas épicos de um produto
+AND issueType = Epic
+
+-- Apenas trabalho ativo
+AND status not in (Done, Closed, Resolved)
+
+-- Últimos 6 meses
+AND created >= -180d
+```
+
+**Campos sugeridos:** `status, issueType, assignee, epic, priority, created`
+
+**Análise sugerida:** "Identifique épicos, times envolvidos e escopo do produto/feature"
+
+---
+
 ## 🔍 Padrões de Filtros Comuns
 
 ### Filtros de Data

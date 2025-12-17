@@ -102,6 +102,18 @@
     "type": "string",
     "description": "Pessoa que reportou o ticket",
     "nullable": false,
+    "values": null  },
+  "created": {
+    "jiraField": "created",
+    "type": "date",
+    "description": "Data de criação do ticket (ISO)",
+    "nullable": false,
     "values": null
-  }
+  },
+  "updated": {
+    "jiraField": "updated",
+    "type": "date",
+    "description": "Data da última atualização (ISO)",
+    "nullable": false,
+    "values": null  }
 }

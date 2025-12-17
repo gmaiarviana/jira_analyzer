@@ -16,7 +16,7 @@ export function loadJiraConfig(): JiraCredentials {
 }
 
 export function getMaxTickets(): number {
-  return parseInt(process.env.MAX_TICKETS || '500', 10);
+  return parseInt(process.env.MAX_TICKETS || '1000', 10);
 }
 
 export function isDebugMode(): boolean {
