@@ -47,7 +47,7 @@ async function main() {
         
         // Inputs (env overrides allow non-interactive runs)
         const jqlQuery = process.env.JQL ?? await inputHandler.askJQL();
-        const fieldsResult = getFieldsSelection(inputHandler);
+        const fieldsResult = await getFieldsSelection(inputHandler);
         const fields = fieldsResult.fields;
         const presetUsed = fieldsResult.presetUsed;
         const analysisQuestion = process.env.ANALYSIS_QUESTION ?? await inputHandler.askAnalysisQuestion();
@@ -93,14 +93,14 @@ main().catch((error) => {
     process.exit(1);
 });
 
-function getFieldsSelection(inputHandler: InputHandler): { fields: string[]; presetUsed: string } {
+function getFieldsSelection(inputHandler: InputHandler): Promise<{ fields: string[]; presetUsed: string }> {
     // Env override: explicit field list (comma separated)
     const envFields = process.env.FIELDS;
     const envPreset = process.env.FIELDS_PRESET;
 
     if (envFields || envPreset) {
         if (envPreset && FieldMappingsLoader.presetExists(envPreset)) {
-            return { fields: FieldMappingsLoader.getPresetFields(envPreset), presetUsed: envPreset };
+            return Promise.resolve({ fields: FieldMappingsLoader.getPresetFields(envPreset), presetUsed: envPreset });
         }
 
         if (envFields) {
@@ -116,7 +116,7 @@ function getFieldsSelection(inputHandler: InputHandler): { fields: string[]; pre
                 throw new Error(`FIELDS contém campos inválidos: ${invalid.join(', ')}`);
             }
 
-            return { fields: Array.from(new Set(parsed)), presetUsed: 'env-custom' };
+            return Promise.resolve({ fields: Array.from(new Set(parsed)), presetUsed: 'env-custom' });
         }
     }
 

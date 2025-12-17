@@ -69,8 +69,11 @@ export class InputHandler {
 
     console.log('\n🎛️  Campos para extrair (deixe vazio para preset básico)');
     presetNames.forEach((name, index) => {
-      const fields = presets[name].join(', ');
-      console.log(`  [${index + 1}] ${name} → ${fields}`);
+      const presetFields = presets[name];
+      if (presetFields) {
+        const fields = presetFields.join(', ');
+        console.log(`  [${index + 1}] ${name} → ${fields}`);
+      }
     });
     console.log('  [Custom] Digite lista separada por vírgula (ex: storyPoints, team, sprint)');
 
@@ -87,10 +90,15 @@ export class InputHandler {
     const numericOption = Number(answer);
     if (!Number.isNaN(numericOption) && numericOption >= 1 && numericOption <= presetNames.length) {
       const presetName = presetNames[numericOption - 1];
-      return {
-        fields: presets[presetName],
-        presetUsed: presetName
-      };
+      if (presetName) {
+        const presetFields = presets[presetName];
+        if (presetFields) {
+          return {
+            fields: presetFields,
+            presetUsed: presetName
+          };
+        }
+      }
     }
 
     // Custom list
