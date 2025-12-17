@@ -1,14 +1,26 @@
 # GitHub Copilot Instructions - JIRA Analyzer
 
+## 🎯 Main Reference
+
+**For complete workflow and usage instructions, see:** [COPILOT-WORKFLOW.md](../COPILOT-WORKFLOW.md)
+
+This file contains:
+- Complete 7-step workflow (question → query → execution → analysis)
+- Question-to-query mappings
+- PowerShell commands for execution
+- Expected output structure
+- Analysis response format
+
 ## Project Overview
-TypeScript/Node.js tool that extracts JIRA data via JQL queries and generates structured prompts for GitHub Copilot analysis. Designed for HP corporate environment.
+TypeScript/Node.js CLI tool that extracts JIRA data via JQL queries and generates structured prompts for GitHub Copilot analysis. Optimized for HP corporate environment with loop CLI and field presets.
 
 ## Core Workflow
 ```
-npm run analyze → Interactive JQL input → Data extraction → Generate 3 files:
-├── data/raw/jira-data-{timestamp}.json
-├── prompts/copilot-prompt-{timestamp}.md  
-└── responses/copilot-response-{timestamp}.md
+npm run analyze → CLI Loop Menu → JQL + Fields Selection → Data extraction → Generate files:
+├── data/raw/jira-data-{timestamp}.json          # Raw data
+├── prompts/copilot-prompt-{timestamp}.md       # Structured prompt
+├── responses/copilot-response-{timestamp}.md   # Analysis template
+└── data/history/queries-{date}.json            # Query history
 ```
 
 ## Environment Constraints

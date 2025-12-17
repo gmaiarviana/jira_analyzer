@@ -1,156 +1,125 @@
-# 🎯 JIRA Analyzer - Extração de Dados para Análise com GitHub Copilot
+# 🎯 JIRA Analyzer
 
-Sistema para extração interativa de dados do JIRA via JQL com geração automática de prompts estruturados para análise com GitHub Copilot.
+Sistema CLI para extração de dados do JIRA via JQL com geração automática de prompts estruturados para análise com GitHub Copilot.
+
+---
+
+## 🤖 Trabalhando com GitHub Copilot?
+
+**Este projeto foi otimizado para análise assistida por IA.**
+
+### → **[Veja o COPILOT WORKFLOW completo](COPILOT-WORKFLOW.md)** ←
+
+O Copilot pode:
+- ✅ Entender sua pergunta em linguagem natural
+- ✅ Construir a query JQL apropriada consultando [10 queries pré-definidas](docs/jql-examples.md)
+- ✅ Executar o analyzer automaticamente
+- ✅ Analisar os dados extraídos e responder com insights acionáveis
+
+**Exemplo:**
+> Você: "Quero saber quantos tickets estão em progresso sem atualização desde dezembro"
+> 
+> Copilot: *[constrói query, executa, analisa e responde com lista de tickets + recomendações]*
+
+---
 
 ## 🚀 Início Rápido
 
-### 1. Pré-requisitos
-- Node.js 18+ instalado
-- Credenciais JIRA (email + API token)
-
-### 2. Setup
-```bash
-# Clone e instale dependências
+### Setup
+```powershell
 npm install
-
-# Configure credenciais JIRA
 cp .env.example .env
-# Edite .env com suas credenciais
+# Configure JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN
 ```
 
-### 3. Uso
-```bash
-# Modo interativo
+### Uso
+```powershell
+# Modo interativo (menu com loop)
 npm run analyze
 
-# Modo não-interativo (útil para automação/CI)
-JQL="project = TSW AND statusCategory != Done" \
-FIELDS_PRESET=basic \
-ANALYSIS_QUESTION="Quantos itens abertos tem?" \
+# Modo automação (para Copilot)
+$env:JQL='project = TSW AND status = "In Progress"'
+$env:FIELDS_PRESET='sprint'
+$env:ANALYSIS_QUESTION='Analise o progresso da sprint'
 npm run analyze
 ```
 
-## Como Funciona
-
-1. **Conectar ao JIRA**: Autentique usando credenciais JIRA (configuradas em `.env`)
-2. **Extrair Dados**: Execute o CLI (interativo ou via variáveis de ambiente) com JQL e seleção de campos/preset
-3. **Gerar Prompt de Análise**: Sistema cria um prompt rico com schema descritivo dos campos extraídos
-4. **Analisar com Copilot**: Copie o prompt gerado e cole no GitHub Copilot
-5. **Iterar**: Rode novamente com JQL ou campos diferentes
-
-### Principais Recursos
-
-- 🎯 **Extração Seletiva**: Escolha campos (presets ou lista) e o cliente só busca o necessário
-- 📋 **Schema no Prompt**: Prompts trazem seções com tipos, enums e nullability dos campos
-- 🧭 **Presets Inteligentes**: Sprint, Bugs, Features, Basic
-- 🔌 **Modo Não-Interativo**: Defina `JQL`, `FIELDS_PRESET` ou `FIELDS`, e `ANALYSIS_QUESTION` para automatizar
-- 💬 **Pronto para Copilot**: Prompts estruturados para copiar/colar
-
-## 📁 Arquivos Gerados
-
-O sistema gera 3 arquivos com timestamp único:
-
+### Saída
 ```
-data/raw/jira-data-2025-01-23T14-30-15.json         # Dados extraídos do JIRA
-prompts/copilot-prompt-2025-01-23T14-30-15.md       # Para colar no Copilot
-responses/copilot-response-2025-01-23T14-30-15.md   # Template de resposta
+data/raw/jira-data-{timestamp}.json         # Dados extraídos
+prompts/copilot-prompt-{timestamp}.md       # Prompt estruturado
+responses/copilot-response-{timestamp}.md   # Template de análise
+data/history/queries-{date}.json            # Histórico do dia
 ```
 
-## ⚙️ Configuração (.env)
+## ⚙️ Configuração
 
+Crie `.env` na raiz:
 ```bash
-# Obrigatórias
 JIRA_BASE_URL=https://sua-instancia-jira.com
 JIRA_EMAIL=seu.email@empresa.com
 JIRA_API_TOKEN=seu_token_api
-
-# Opcionais
-MAX_TICKETS=500        # Máximo de tickets por consulta
-DEBUG=false            # Logs detalhados
+MAX_TICKETS=500  # Opcional
 ```
 
-### Como obter API Token JIRA
-1. Acesse: JIRA → Profile → Personal Access Tokens
-2. Crie novo token com permissões de leitura
-3. Copie o token para JIRA_API_TOKEN
+**API Token:** JIRA → Profile → Personal Access Tokens
 
-## Uso
+---
 
-### Fluxo Básico
-```bash
-# Iniciar CLI interativa
-npm run analyze
+## 📚 Documentação
 
-# Escolher ação
-> [1] Nova consulta
-> [2] Sair
+- **[COPILOT-WORKFLOW.md](COPILOT-WORKFLOW.md)** ← Guia completo (LEIA PRIMEIRO)
+- **[docs/jql-examples.md](docs/jql-examples.md)** - 10 queries pré-definidas
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Arquitetura técnica
+- **[ROADMAP.md](ROADMAP.md)** - Próximos épicos
 
-# Digite sua JQL
-> JQL: project = TSW AND sprint in openSprints()
+---
 
-# Selecione campos (ou pressione Enter para padrão)
-> Campos: storyPoints, team, sprint
-# Ou escolha preset: [1] Sprint [2] Bugs [3] Features [4] Personalizado
+## 🗺️ Campos e Presets
 
-# Dados extraídos!
-✅ 465 tickets extraídos
-📋 Prompt gerado: prompts/copilot-prompt-2025-12-16T15-36-24.md
-💾 Dados salvos: data/raw/jira-data-2025-12-16T15-36-24.json
+**15 campos mapeados:**
+`storyPoints`, `team`, `sprint`, `epic`, `severity`, `rootCause`, `acceptanceCriteria`, `parentTask`, `subtasksCount`, `progress`, `priority`, `issueType`, `status`, `assignee`, `reporter`
 
-# Copie o prompt para o GitHub Copilot e faça perguntas:
-- "Quantos story points a equipe Aurora completou?"
-- "Qual é o tempo médio de ciclo?"
-- "Quais tarefas estão abertas há mais tempo?"
+**4 presets:**
+`basic`, `sprint`, `bugs`, `features`
 
-# Continue com consulta diferente
-> [1] Nova consulta (JQL diferente)
-> [2] Mesma consulta, campos diferentes
-> [3] Sair
-```
+Ver `src/config/field-mappings.json` para detalhes
 
-### Presets de Campos
+**Presets prontos:**
+- `basic`: status, storyPoints, assignee
+- `sprint`: status, storyPoints, assignee, sprint, priority
+- `bugs`: priority, severity, status, rootCause, assignee
+- `features`: epic, status, storyPoints, assignee, priority
 
-- **Sprint**: storyPoints, team, status, assignee, sprint, issueType, priority
-- **Bugs**: priority, severity, reporter, rootCause, status, assignee, issueType
-- **Features**: epic, parentTask, subtasksCount, acceptanceCriteria, progress, status, issueType
-- **Basic**: status, priority, assignee, reporter, team, issueType (padrão)
-
-## Mapeamento de Campos
-
-O sistema mapeia campos customizados do JIRA para nomes legíveis. Configuração em `src/config/field-mappings.json`.
-
-Campos comuns:
-- `storyPoints` → Estimativa de story points
-- `team` → Equipe de entrega/squad
-- `sprint` → Objeto de sprint Scrum
-- `epic` → Vínculo de epic
-- `severity` → Severidade de bug
-- `rootCause` → Análise de causa raiz
-
-Os prompts gerados incluem descrições completas do esquema para que o Copilot entenda sua estrutura de dados.
-
-## Estrutura do Projeto
+## 📁 Estrutura do Projeto
 
 ```
 jira-analyzer/
 ├── src/
-│   ├── main.ts              # Ponto de entrada (loop interativo)
+│   ├── main.ts                      # Ponto de entrada (loop interativo)
 │   ├── core/
-│   │   ├── jira-client.ts   # Cliente da API JIRA
-│   │   └── data-extractor.ts # Normalização de dados
+│   │   ├── jira-client.ts          # Cliente da API JIRA
+│   │   └── data-extractor.ts       # Normalização de dados
 │   ├── config/
-│   │   └── field-mappings.json # Mapeamento de campos customizados
+│   │   ├── field-mappings.json     # Mapeamento de campos customizados
+│   │   └── field-mappings-loader.ts # Carregamento de mappings
 │   ├── interfaces/
-│   │   └── jira-types.ts    # Tipos TypeScript
+│   │   └── jira-types.ts           # Tipos TypeScript
 │   └── utils/
-│       ├── config.ts        # Variáveis de ambiente
-│       ├── file-manager.ts  # Operações de I/O de arquivo
-│       └── input-handler.ts # Manipulação de entrada CLI
+│       ├── config.ts               # Variáveis de ambiente
+│       ├── file-manager.ts         # Operações de I/O + histórico
+│       └── input-handler.ts        # CLI interativo + menus
+├── docs/
+│   ├── jql-examples.md             # 10 queries pré-definidas
+│   ├── COPILOT-WORKFLOW.md         # Guia de uso com Copilot
+│   ├── ARCHITECTURE.md             # Documentação técnica
+│   └── DEVELOPMENT_GUIDELINES.md   # Padrões de código
 ├── data/
-│   ├── raw/                 # Dados JSON extraídos
-│   └── history/             # Histórico de consultas
-├── prompts/                 # Prompts Copilot gerados
-└── responses/               # Templates de análise
+│   ├── raw/                        # Dados JSON extraídos (gitignore)
+│   └── history/                    # Histórico de queries (gitignore)
+├── prompts/                        # Prompts gerados (gitignore)
+├── responses/                      # Templates de resposta (gitignore)
+└── ROADMAP.md                      # Planejamento de features
 ```
 
 ## 🛠️ Troubleshooting
